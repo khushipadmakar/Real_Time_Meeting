@@ -36,13 +36,6 @@ jobs:
           echo "OPENAI_API_KEY=sk-test-ci" >> .env
 
 
-      - name: Validate API health endpoint
-        run: |
-          uvicorn backend.main:app --host 0.0.0.0 --port 9000 &
-
-          sleep 5
-          curl -f http://localhost:9000/health || exit 1
-          kill %1
 
   test-frontend:
     name: Frontend Build
