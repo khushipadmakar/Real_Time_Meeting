@@ -1,0 +1,41 @@
+# Core
+fastapi
+uvicorn[standard]
+websockets
+python-multipart
+
+# Database
+sqlalchemy
+aiosqlite
+
+# Kafka
+confluent-kafka
+
+# ML
+scikit-learn
+numpy
+pandas
+
+# Audio / Transcription
+faster-whisper
+sounddevice
+soundfile
+
+# GenAI / LLM (Groq is OpenAI-compatible)
+openai
+
+# Vector DB
+chromadb
+
+# Embeddings
+sentence-transformers
+
+# Utilities
+pydantic
+pydantic-settings
+python-dotenv
+httpx
+
+# Testing
+pytest
+pytest-asyncio

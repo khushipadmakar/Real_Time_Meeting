@@ -1,0 +1,26 @@
+{
+  "name": "meeting-ai-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-scripts": "5.0.1",
+    "recharts": "^2.12.7",
+    "axios": "^1.7.2",
+    "@mui/material": "^5.15.20",
+    "@mui/icons-material": "^5.15.20",
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test"
+  },
+  "proxy": "http://localhost:9000",
+  "browserslist": {
+    "production": [">0.2%", "not dead", "not op_mini all"],
+    "development": ["last 1 chrome version"]
+  }
+}

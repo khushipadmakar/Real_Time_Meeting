@@ -1,0 +1,109 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  test-backend:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+
+      - name: Install system deps (ffmpeg)
+        run: sudo apt-get install -y ffmpeg
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Create .env for CI
+        run: |
+          cp .env.example .env
+          echo "OPENAI_API_KEY=sk-test-ci" >> .env
+
+      - name: Run pytest — ML tests (no external deps)
+        run: pytest tests/test_ml.py -v
+
+      - name: Run pytest — RAG/embedding tests
+        run: pytest tests/test_rag.py -v
+
+      - name: Run pytest — Kafka tests (mocked)
+        run: pytest tests/test_kafka.py -v
+
+      - name: Run pytest — GenAI tests (mocked LLM)
+        run: pytest tests/test_genai.py -v
+
+      - name: Run pytest — API endpoint tests
+        run: pytest tests/test_api.py -v
+
+      - name: Validate API health endpoint
+        run: |
+          uvicorn backend.main:app --host 0.0.0.0 --port 9000 &
+
+          sleep 5
+          curl -f http://localhost:9000/health || exit 1
+          kill %1
+
+  test-frontend:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package.json
+
+      - name: Install frontend deps
+        working-directory: frontend
+        run: npm install
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+  validate-vector-indexing:
+    name: Validate Vector Indexing
+    runs-on: ubuntu-latest
+    needs: test-backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      - name: Validate ChromaDB indexing and retrieval
+        run: |
+          python - <<'EOF'
+          import os
+          os.makedirs("./data/chroma", exist_ok=True)
+          from backend.rag.vector_store import index_chunks, retrieve, chunk_text
+          text = "Kafka streaming pipeline was discussed. Deployment issues were raised by the team."
+          chunks = chunk_text(text)
+          ids = index_chunks(chunks, meeting_id="ci-test")
+          assert len(ids) == len(chunks), f"Expected {len(chunks)} ids, got {len(ids)}"
+          results = retrieve("Kafka streaming", meeting_id="ci-test", top_k=2)
+          assert len(results) > 0, "Retrieval returned no results"
+          print(f"✅ Indexed {len(ids)} chunks, retrieved {len(results)} results")
+          EOF
