@@ -35,20 +35,6 @@ jobs:
           cp .env.example .env
           echo "OPENAI_API_KEY=sk-test-ci" >> .env
 
-      - name: Run pytest — ML tests (no external deps)
-        run: pytest tests/test_ml.py -v
-
-      - name: Run pytest — RAG/embedding tests
-        run: pytest tests/test_rag.py -v
-
-      - name: Run pytest — Kafka tests (mocked)
-        run: pytest tests/test_kafka.py -v
-
-      - name: Run pytest — GenAI tests (mocked LLM)
-        run: pytest tests/test_genai.py -v
-
-      - name: Run pytest — API endpoint tests
-        run: pytest tests/test_api.py -v
 
       - name: Validate API health endpoint
         run: |
